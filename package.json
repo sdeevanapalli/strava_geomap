@@ -22,12 +22,14 @@
     "next": "14.2.33",
     "polyline": "^0.2.0",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-leaflet": "^4.2.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/node": "^20",
+    "@types/polyline": "^0.1.32",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
