@@ -9,6 +9,7 @@ import { StravaActivity } from '@/types/strava';
 import StatsPanel from '@/components/StatsPanel';
 import FilterBar, { ActivityFilters } from '@/components/FilterBar';
 import { Loader2, Map as MapIcon, Flame, RefreshCw } from 'lucide-react';
+import SettingsPanel from '@/components/SettingsPanel';
 
 // Dynamically import map to avoid SSR issues
 const ActivityMap = dynamic(() => import('@/components/ActivityMap'), {
@@ -29,6 +30,7 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<'route' | 'heatmap'>('route');
   const [isLoadingActivities, setIsLoadingActivities] = useState(false);
   const [useMockData, setUseMockData] = useState(false);
+  const [activityLimit, setActivityLimit] = useState(200);
 
   useEffect(() => {
     // Check URL for OAuth tokens
@@ -62,7 +64,7 @@ export default function Home() {
   const loadActivities = async (accessToken: string) => {
     setIsLoadingActivities(true);
     try {
-      const data = await stravaApi.fetchActivities(accessToken, 50); // Fetch more activities
+      const data = await stravaApi.fetchActivities(accessToken, activityLimit);
       setAllActivities(data);
       setFilteredActivities(data);
       setUseMockData(false);
@@ -158,6 +160,18 @@ export default function Home() {
                   <RefreshCw className={`w-5 h-5 ${isLoadingActivities ? 'animate-spin' : ''}`} />
                 </button>
 
+                  {/* Settings Panel */}
+                  <SettingsPanel 
+                    currentLimit={activityLimit}
+                    onActivityLimitChange={(limit) => {
+                      setActivityLimit(limit);
+                      const tokens = storage.getTokens();
+                      if (tokens) {
+                        loadActivities(tokens.access_token);
+                      }
+                    }}
+                  />
+
                 {/* View Mode Toggle */}
                 <div className="flex bg-gray-100 rounded-lg p-1">
                   <button
@@ -223,13 +237,14 @@ export default function Home() {
 
           {/* Map */}
           <div className="bg-white rounded-lg shadow-lg p-4" style={{ height: '600px' }}>
-            {isLoadingActivities ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-center">
-                  <Loader2 className="w-12 h-12 text-strava-orange animate-spin mx-auto mb-4" />
-                  <p className="text-gray-600">Loading activities...</p>
-                </div>
+          {isLoadingActivities ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-center">
+                <Loader2 className="w-12 h-12 text-strava-orange animate-spin mx-auto mb-4" />
+                <p className="text-gray-600">Loading activities...</p>
+                <p className="text-gray-500 text-sm mt-2">This may take a moment for large activity histories</p>
               </div>
+            </div>
             ) : filteredActivities.length > 0 ? (
               <ActivityMap activities={filteredActivities} viewMode={viewMode} />
             ) : (
