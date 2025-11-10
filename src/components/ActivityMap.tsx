@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Polyline, useMap } from 'react-leaflet';
 import { StravaActivity } from '@/types/strava';
 import { polylineUtils } from '@/lib/polyline';
