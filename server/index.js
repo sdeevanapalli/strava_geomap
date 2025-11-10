@@ -14,7 +14,7 @@ app.use(express.json());
 const STRAVA_CLIENT_ID = process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID || process.env.STRAVA_CLIENT_ID;
 const STRAVA_CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET;
 const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || process.env.REDIRECT_URI;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://strava-geomap.vercel.app/login';
 
 // Health check endpoint
 app.get('/health', (req, res) => {
