@@ -11,9 +11,10 @@ app.use(cors());
 app.use(express.json());
 
 // Strava API Configuration
-const STRAVA_CLIENT_ID = process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID;
+const STRAVA_CLIENT_ID = process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID || process.env.STRAVA_CLIENT_ID;
 const STRAVA_CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET;
-const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI;
+const REDIRECT_URI = process.env.NEXT_PUBLIC_REDIRECT_URI || process.env.REDIRECT_URI;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -21,7 +22,8 @@ app.get('/health', (req, res) => {
     status: 'OK', 
     message: 'Strava OAuth Server is running',
     hasClientId: !!STRAVA_CLIENT_ID,
-    hasClientSecret: !!STRAVA_CLIENT_SECRET
+    hasClientSecret: !!STRAVA_CLIENT_SECRET,
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -39,11 +41,11 @@ app.get('/auth/callback', async (req, res) => {
 
   // Handle authorization denial
   if (error) {
-    return res.redirect(`http://localhost:3000/login?error=${error}`);
+    return res.redirect(`${FRONTEND_URL}/login?error=${error}`);
   }
 
   if (!code) {
-    return res.redirect('http://localhost:3000/login?error=no_code');
+    return res.redirect(`${FRONTEND_URL}/login?error=no_code`);
   }
 
   try {
@@ -58,12 +60,12 @@ app.get('/auth/callback', async (req, res) => {
     const { access_token, refresh_token, expires_at, athlete } = tokenResponse.data;
 
     // Redirect back to frontend with tokens
-    const redirectUrl = `http://localhost:3000/?access_token=${access_token}&refresh_token=${refresh_token}&expires_at=${expires_at}&athlete_id=${athlete.id}`;
+    const redirectUrl = `${FRONTEND_URL}/?access_token=${access_token}&refresh_token=${refresh_token}&expires_at=${expires_at}&athlete_id=${athlete.id}`;
     res.redirect(redirectUrl);
 
   } catch (error) {
     console.error('Error exchanging code for token:', error.response?.data || error.message);
-    res.redirect('http://localhost:3000/login?error=token_exchange_failed');
+    res.redirect(`${FRONTEND_URL}/login?error=token_exchange_failed`);
   }
 });
 
@@ -126,7 +128,10 @@ app.listen(PORT, () => {
   console.log(`🚀 OAuth Server running on http://localhost:${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/health`);
   console.log(`🔐 Strava OAuth: http://localhost:${PORT}/auth/strava`);
+  console.log(`🌐 Frontend URL: ${FRONTEND_URL}`);
   console.log(`\n⚙️  Configuration:`);
+  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`   Client ID: ${STRAVA_CLIENT_ID ? '✓ Set' : '✗ Missing'}`);
   console.log(`   Client Secret: ${STRAVA_CLIENT_SECRET ? '✓ Set' : '✗ Missing'}`);
+  console.log(`   Redirect URI: ${REDIRECT_URI || '✗ Missing'}`);
 });
