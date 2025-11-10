@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
@@ -32,8 +32,26 @@ export default function Home() {
   const [useMockData, setUseMockData] = useState(false);
   const [activityLimit, setActivityLimit] = useState(200);
 
+  // ✅ useCallback added to ensure stable reference for useEffect
+  const loadActivities = useCallback(async (accessToken: string) => {
+    setIsLoadingActivities(true);
+    try {
+      const data = await stravaApi.fetchActivities(accessToken, activityLimit);
+      setAllActivities(data);
+      setFilteredActivities(data);
+      setUseMockData(false);
+    } catch (error) {
+      console.error('Failed to fetch activities:', error);
+      setAllActivities(mockActivities);
+      setFilteredActivities(mockActivities);
+      setUseMockData(true);
+    } finally {
+      setIsLoadingActivities(false);
+    }
+  }, [activityLimit]);
+
+  // ✅ useEffect now includes loadActivities as a dependency
   useEffect(() => {
-    // Check URL for OAuth tokens
     const { access_token, refresh_token, expires_at } = router.query;
 
     if (access_token && refresh_token && expires_at) {
@@ -50,7 +68,6 @@ export default function Home() {
       return;
     }
 
-    // Check if user already has valid tokens
     const tokens = storage.getTokens();
     if (tokens && !storage.isTokenExpired(tokens.expires_at)) {
       setIsAuthenticated(true);
@@ -59,48 +76,28 @@ export default function Home() {
     } else {
       router.push('/login');
     }
-  }, [router]);
-
-  const loadActivities = async (accessToken: string) => {
-    setIsLoadingActivities(true);
-    try {
-      const data = await stravaApi.fetchActivities(accessToken, activityLimit);
-      setAllActivities(data);
-      setFilteredActivities(data);
-      setUseMockData(false);
-    } catch (error) {
-      console.error('Failed to fetch activities:', error);
-      // Fallback to mock data
-      setAllActivities(mockActivities);
-      setFilteredActivities(mockActivities);
-      setUseMockData(true);
-    } finally {
-      setIsLoadingActivities(false);
-    }
-  };
+  }, [router, loadActivities]);
 
   const handleFilterChange = (filters: ActivityFilters) => {
     let filtered = [...allActivities];
 
-    // Filter by activity type
     if (filters.activityTypes.length > 0) {
-      filtered = filtered.filter(activity => 
+      filtered = filtered.filter(activity =>
         filters.activityTypes.includes(activity.type)
       );
     }
 
-    // Filter by date range
     if (filters.dateRange.start) {
       const startDate = new Date(filters.dateRange.start);
-      filtered = filtered.filter(activity => 
+      filtered = filtered.filter(activity =>
         new Date(activity.start_date) >= startDate
       );
     }
 
     if (filters.dateRange.end) {
       const endDate = new Date(filters.dateRange.end);
-      endDate.setHours(23, 59, 59, 999); // Include the entire end day
-      filtered = filtered.filter(activity => 
+      endDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(activity =>
         new Date(activity.start_date) <= endDate
       );
     }
@@ -160,17 +157,17 @@ export default function Home() {
                   <RefreshCw className={`w-5 h-5 ${isLoadingActivities ? 'animate-spin' : ''}`} />
                 </button>
 
-                  {/* Settings Panel */}
-                  <SettingsPanel 
-                    currentLimit={activityLimit}
-                    onActivityLimitChange={(limit) => {
-                      setActivityLimit(limit);
-                      const tokens = storage.getTokens();
-                      if (tokens) {
-                        loadActivities(tokens.access_token);
-                      }
-                    }}
-                  />
+                {/* Settings Panel */}
+                <SettingsPanel
+                  currentLimit={activityLimit}
+                  onActivityLimitChange={(limit) => {
+                    setActivityLimit(limit);
+                    const tokens = storage.getTokens();
+                    if (tokens) {
+                      loadActivities(tokens.access_token);
+                    }
+                  }}
+                />
 
                 {/* View Mode Toggle */}
                 <div className="flex bg-gray-100 rounded-lg p-1">
@@ -197,6 +194,7 @@ export default function Home() {
                     Heatmap
                   </button>
                 </div>
+
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
@@ -214,7 +212,7 @@ export default function Home() {
           {useMockData && (
             <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-yellow-800 text-sm">
-                ⚠️ Using mock data for demonstration. Real Strava data couldn't be loaded.
+                ⚠️ Using mock data for demonstration. Real Strava data couldn&apos;t be loaded.
               </p>
             </div>
           )}
@@ -237,14 +235,14 @@ export default function Home() {
 
           {/* Map */}
           <div className="bg-white rounded-lg shadow-lg p-4" style={{ height: '600px' }}>
-          {isLoadingActivities ? (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center">
-                <Loader2 className="w-12 h-12 text-strava-orange animate-spin mx-auto mb-4" />
-                <p className="text-gray-600">Loading activities...</p>
-                <p className="text-gray-500 text-sm mt-2">This may take a moment for large activity histories</p>
+            {isLoadingActivities ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center">
+                  <Loader2 className="w-12 h-12 text-strava-orange animate-spin mx-auto mb-4" />
+                  <p className="text-gray-600">Loading activities...</p>
+                  <p className="text-gray-500 text-sm mt-2">This may take a moment for large activity histories</p>
+                </div>
               </div>
-            </div>
             ) : filteredActivities.length > 0 ? (
               <ActivityMap activities={filteredActivities} viewMode={viewMode} />
             ) : (
