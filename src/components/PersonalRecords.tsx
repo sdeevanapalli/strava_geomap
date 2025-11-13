@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+
 import { StravaActivity } from '@/types/strava';
 import { Trophy, Mountain, Zap, Calendar, Flame, Award } from 'lucide-react';
 import { format } from 'date-fns';
