@@ -10,7 +10,6 @@ import StatsPanel from "@/components/StatsPanel";
 import FilterBar, { ActivityFilters } from "@/components/FilterBar";
 import { Loader2, Map as MapIcon, Flame, RefreshCw } from "lucide-react";
 import SettingsPanel from "@/components/SettingsPanel";
-import PersonalRecords from "@/components/PersonalRecords";
 
 const ActivityMap = dynamic(() => import("@/components/ActivityMap"), {
   ssr: false,
