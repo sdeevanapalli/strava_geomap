@@ -10,6 +10,7 @@ import StatsPanel from '@/components/StatsPanel';
 import FilterBar, { ActivityFilters } from '@/components/FilterBar';
 import { Loader2, Map as MapIcon, Flame, RefreshCw } from 'lucide-react';
 import SettingsPanel from '@/components/SettingsPanel';
+import PersonalRecords from '@/components/PersonalRecords';
 
 // Dynamically import map to avoid SSR issues
 const ActivityMap = dynamic(() => import('@/components/ActivityMap'), {
@@ -221,6 +222,8 @@ export default function Home() {
           <div className="mb-6">
             <StatsPanel activities={filteredActivities} />
           </div>
+
+          <PersonalRecords activities={filteredActivities} />
 
           {/* Filter Bar */}
           <FilterBar onFilterChange={handleFilterChange} />
