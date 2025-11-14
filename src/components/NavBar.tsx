@@ -8,7 +8,7 @@ export default function Navbar() {
 
   const links = [
     { name: "Dashboard", href: "/", icon: BarChart },
-    { name: "Personal Records", href: "/pr", icon: Flame },
+    { name: "Personal Records", href: "/personalrecords", icon: Flame },
     { name: "Profile", href: "/profile", icon: User },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
